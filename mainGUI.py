@@ -54,7 +54,7 @@ class Example(QWidget):
         hbox = QHBoxLayout()
 
         checker1 = checkerPattern(10,10,512,512,0)
-        checker2 = checkerPattern(3,3,512,512,0)
+        checker2 = checkerPattern(3,3,256,256,0)
         checker3 = checkerPattern(20,20,512,512,0)
         hbox.addLayout(checker1.grid)
         hbox.addLayout(checker2.grid)
