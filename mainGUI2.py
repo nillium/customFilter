@@ -33,6 +33,20 @@ class mainWindow(QWidget):
         self.centerVBOX = QVBoxLayout()
         self.rightVBOX = QVBoxLayout()
 
+        
+
+        self.filterSizeSlider = QSlider(Qt.Orientation.Horizontal)
+        self.filterSizeSlider.setMinimum(10)
+        self.filterSizeSlider.setMaximum(30)
+        self.filterSizeSlider.setValue(20)
+        self.filterSizeSlider.setFixedWidth(512)
+        self.filterSizeSlider.valueChanged.connect(self.onSliderChange)
+        self.filterSizeSlider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.filterSizeSlider.setTickInterval(1)
+
+        self.filtersize_LBL = QLabel('Filter Size = %d px' % self.filterSizeSlider.value(), self)
+        self.filtersize_LBL.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
         infoText = QLabel('No filter selected. Please select a filter.', self)
         infoText.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -64,7 +78,7 @@ class mainWindow(QWidget):
         #sc = MplCanvas(self, width=5, height=4, dpi=100)
         #sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
         
-
+    
        
 
 
@@ -96,8 +110,8 @@ class mainWindow(QWidget):
         leftHBOX.addWidget(prevChannel_BTN)
         leftHBOX.addWidget(nextChannel_BTN)
         
-
-        #centerVBOX.addWidget(frameC)
+        self.centerVBOX.addWidget(self.filtersize_LBL)
+        self.centerVBOX.addWidget(self.filterSizeSlider)
         self.centerVBOX.addWidget(infoText)
         self.centerVBOX.addWidget(selectFilter_BTN)
         self.centerVBOX.addWidget(convolute_BTN)
@@ -143,7 +157,13 @@ class mainWindow(QWidget):
         self.leftVBOX.addWidget(self.canvasL)
         self.inputImageLoaded = True
         
-        
+
+        self.filterSize = 20
+    def onSliderChange(self):
+        self.filtersize_LBL.setText('Filter Size = %d px' % self.filterSizeSlider.value())
+        self.filterSize = self.filterSizeSlider.value()
+    
+
         
     def selectFilter(self):
         if self.filterImageLoaded:
@@ -160,7 +180,7 @@ class mainWindow(QWidget):
         file_dialog.setWindowTitle('Open File')
         image_path = response[0]
         self.filter = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        self.filter = cv2.resize(self.filter, (12,12))
+        self.filter = cv2.resize(self.filter, (self.filterSize,self.filterSize))
         ret1,plus = cv2.threshold(self.filter,200,255,cv2.THRESH_BINARY)
         ret2,minus = cv2.threshold(self.filter,150,255,cv2.THRESH_BINARY_INV)
         self.minuses = minus / -255
@@ -207,7 +227,7 @@ class mainWindow(QWidget):
 
             ])
             #print(f.shape)
-            a = a.reshape((12, 12, 1, 1))
+            a = a.reshape((self.filterSize, self.filterSize, 1, 1))
             assert a.shape == shape
             return K.variable(a, dtype='float32')
             
@@ -216,7 +236,7 @@ class mainWindow(QWidget):
             inputs = tf.keras.Input(shape=(512, 512, 1))
 
             convolute = layers.Conv2D(filters=1, 
-                            kernel_size = 12,
+                            kernel_size = self.filterSize,
                             kernel_initializer=my_filter,
                             strides=1, 
                             padding='valid') (inputs)
