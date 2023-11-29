@@ -2,27 +2,22 @@ import sys, os
 from PyQt6.QtWidgets import QWidget, QPushButton, QFrame, QGridLayout, QLabel, QFileDialog, QHBoxLayout, QVBoxLayout, QApplication
 from PyQt6.QtCore import Qt
 
-class MyWindow(QWidget):
+class mainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
         self.initUI()
 
     def initUI(self):
-        # UI setup code
 
         mainHBox = QHBoxLayout(self)
         leftVBOX = QVBoxLayout()
         centerVBOX = QVBoxLayout()
         rightVBOX = QVBoxLayout()
 
-
         infoText = QLabel('Hello, PyQt6!')
         infoText.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        
 
-        # Button to open a file dialog
         changeInput_BTN = QPushButton('Change Input', self)
         changeInput_BTN.clicked.connect(self.showFileDialog)
 
@@ -97,6 +92,6 @@ class MyWindow(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = MyWindow()
+    window = mainWindow()
     window.show()
     sys.exit(app.exec())
