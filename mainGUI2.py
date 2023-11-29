@@ -1,5 +1,5 @@
 import sys, os
-from PyQt6.QtWidgets import QWidget, QPushButton, QFrame, QGridLayout, QLabel, QFileDialog, QHBoxLayout, QVBoxLayout, QApplication
+from PyQt6.QtWidgets import QWidget, QPushButton, QFrame, QGridLayout, QLabel, QFileDialog, QHBoxLayout, QVBoxLayout, QApplication, QSlider
 from PyQt6.QtCore import Qt
 from matplotlib.backend_bases import FigureCanvasBase
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -160,7 +160,18 @@ class mainWindow(QWidget):
         file_dialog.setWindowTitle('Open File')
         image_path = response[0]
         self.filter = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        self.filter = cv2.resize(self.filter, (256,256))
+        self.filter = cv2.resize(self.filter, (12,12))
+        ret1,plus = cv2.threshold(self.filter,200,255,cv2.THRESH_BINARY)
+        ret2,minus = cv2.threshold(self.filter,150,255,cv2.THRESH_BINARY_INV)
+        self.minuses = minus / -255
+        self.pluses = plus / 255
+        self.filter = self.minuses + self.pluses
+        print("Pluses")
+        print(self.pluses)
+        print("Minuses")
+        print(self.minuses)
+        print("Filter")
+        print(self.filter)
         print(f'Selected File: {response[0]}')
 
 
@@ -184,6 +195,8 @@ class mainWindow(QWidget):
 
         # custom filter
         def my_filter(shape, dtype=None):
+            a = self.filter
+            
 
             f = np.array([
                 [[[-1]], [[0]], [[1]]],
@@ -193,14 +206,17 @@ class mainWindow(QWidget):
                 [[[-1]], [[0]], [[1]]]
 
             ])
-            assert f.shape == shape
-            return K.variable(f, dtype='float32')
+            #print(f.shape)
+            a = a.reshape((12, 12, 1, 1))
+            assert a.shape == shape
+            return K.variable(a, dtype='float32')
+            
 
         def build_model():
             inputs = tf.keras.Input(shape=(512, 512, 1))
 
             convolute = layers.Conv2D(filters=1, 
-                            kernel_size = 3,
+                            kernel_size = 12,
                             kernel_initializer=my_filter,
                             strides=1, 
                             padding='valid') (inputs)
