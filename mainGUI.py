@@ -1,6 +1,5 @@
-import sys
-from PyQt6.QtWidgets import (QWidget, QPushButton,QFrame,QGridLayout,QLabel,
-        QHBoxLayout, QVBoxLayout, QApplication)
+import sys, os
+from PyQt6.QtWidgets import QWidget, QPushButton,QFrame,QGridLayout, QLabel, QFileDialog, QHBoxLayout, QVBoxLayout, QApplication
 
 class checkerPattern:
     def __init__(self, rows=6, columns=6, width=512, height=512, spacing=0):
@@ -51,15 +50,36 @@ class Example(QWidget):
         self.resize(900, 400)
         self.center()
 
-        hbox = QHBoxLayout()
+        mainHBox = QHBoxLayout()
+        centerVBOX = QVBoxLayout()
 
         checker1 = checkerPattern(10,10,512,512,0)
-        checker2 = checkerPattern(3,3,512,512,0)
+        checker2 = checkerPattern(3,3,256,256,0)
         checker3 = checkerPattern(20,20,512,512,0)
-        hbox.addLayout(checker1.grid)
-        hbox.addLayout(checker2.grid)
-        hbox.addLayout(checker3.grid)
-        self.setLayout(hbox)
+        selectFilter_btn = QPushButton(self)
+
+        def getFileName(self):
+            file_filter = 'Data File (*.xlsx *.csv *.dat);; Excel File (*.xlsx *.xls);; Image File (*.png *.jpg)'
+            response = QFileDialog.getOpenFileName(
+                parent=Example,
+                caption='Select a file',
+                directory=os.getcwd(),
+                filter=file_filter,
+                initialFilter='Excel File (*.xlsx *.xls)'
+            )
+
+        
+
+        selectFilter_btn.setText("Select Filter")
+        selectFilter_btn.clicked.connect(getFileName)
+
+     
+
+        mainHBox.addLayout(checker1.grid)
+        mainHBox.addLayout(centerVBOX)
+        centerVBOX.addWidget(selectFilter_btn)
+        mainHBox.addLayout(checker3.grid)
+        self.setLayout(mainHBox)
 
         self.setWindowTitle('Center')
         self.show()
