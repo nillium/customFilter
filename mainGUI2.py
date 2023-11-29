@@ -33,7 +33,38 @@ class mainWindow(QWidget):
         self.centerVBOX = QVBoxLayout()
         self.rightVBOX = QVBoxLayout()
 
+        #LOWER TRESHOLD SLIDER
+
+        self.lowerTresholdSlider = QSlider(Qt.Orientation.Horizontal)
+        self.lowerTresholdSlider.setMinimum(1)
+        self.lowerTresholdSlider.setMaximum(127)
+        self.lowerTresholdSlider.setValue(64)
+        self.lowerTresholdSlider.setFixedWidth(512)
+        self.lowerTresholdSlider.valueChanged.connect(self.lowerTresholdSliderChange)
+        self.lowerTresholdSlider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.lowerTresholdSlider.setTickInterval(1)
+
+        self.lowerTresholdSlider_LBL = QLabel('Lower Treshold = %d px' % self.lowerTresholdSlider.value(), self)
+        self.lowerTresholdSlider_LBL.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+
+        #UPPER TRESHOLD SLIDER
         
+        self.upperTresholdSlider = QSlider(Qt.Orientation.Horizontal)
+        self.upperTresholdSlider.setMinimum(128)
+        self.upperTresholdSlider.setMaximum(254)
+        self.upperTresholdSlider.setValue(192)
+        self.upperTresholdSlider.setFixedWidth(512)
+        self.upperTresholdSlider.valueChanged.connect(self.upperTresholdSliderChange)
+        self.upperTresholdSlider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.upperTresholdSlider.setTickInterval(1)
+
+
+        self.upperTresholdSlider_LBL = QLabel('Upper Treshold = %d px' % self.upperTresholdSlider.value(), self)
+        self.upperTresholdSlider_LBL.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+
+        #FILTER SIZE SLIDER
 
         self.filterSizeSlider = QSlider(Qt.Orientation.Horizontal)
         self.filterSizeSlider.setMinimum(10)
@@ -46,6 +77,8 @@ class mainWindow(QWidget):
 
         self.filtersize_LBL = QLabel('Filter Size = %d px' % self.filterSizeSlider.value(), self)
         self.filtersize_LBL.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        #***
 
         infoText = QLabel('No filter selected. Please select a filter.', self)
         infoText.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -112,6 +145,10 @@ class mainWindow(QWidget):
         
         self.centerVBOX.addWidget(self.filtersize_LBL)
         self.centerVBOX.addWidget(self.filterSizeSlider)
+        self.centerVBOX.addWidget(self.upperTresholdSlider_LBL)
+        self.centerVBOX.addWidget(self.upperTresholdSlider)
+        self.centerVBOX.addWidget(self.lowerTresholdSlider_LBL)
+        self.centerVBOX.addWidget(self.lowerTresholdSlider)
         self.centerVBOX.addWidget(infoText)
         self.centerVBOX.addWidget(selectFilter_BTN)
         self.centerVBOX.addWidget(convolute_BTN)
@@ -158,11 +195,24 @@ class mainWindow(QWidget):
         self.inputImageLoaded = True
         
 
-        self.filterSize = 20
+    filterSize = 20
+    upperTreshold = 192
+    lowerTreshold = 64
+        
     def onSliderChange(self):
         self.filtersize_LBL.setText('Filter Size = %d px' % self.filterSizeSlider.value())
         self.filterSize = self.filterSizeSlider.value()
+
+    def lowerTresholdSliderChange(self):
+        self.lowerTresholdSlider_LBL.setText('Lower Treshold = %d' % self.lowerTresholdSlider.value())
+        self.lowerTreshold = self.lowerTresholdSlider.value()
+
+    def upperTresholdSliderChange(self):
+        self.upperTresholdSlider_LBL.setText('Upper Treshold = %d' % self.upperTresholdSlider.value())
+        self.upperTreshold = self.upperTresholdSlider.value()
     
+
+
 
         
     def selectFilter(self):
@@ -181,8 +231,8 @@ class mainWindow(QWidget):
         image_path = response[0]
         self.filter = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         self.filter = cv2.resize(self.filter, (self.filterSize,self.filterSize))
-        ret1,plus = cv2.threshold(self.filter,200,255,cv2.THRESH_BINARY)
-        ret2,minus = cv2.threshold(self.filter,150,255,cv2.THRESH_BINARY_INV)
+        ret1,plus = cv2.threshold(self.filter,127,self.upperTreshold,cv2.THRESH_BINARY)
+        ret2,minus = cv2.threshold(self.filter,self.lowerTreshold,127,cv2.THRESH_BINARY)
         self.minuses = minus / -255
         self.pluses = plus / 255
         self.filter = self.minuses + self.pluses
