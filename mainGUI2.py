@@ -1,5 +1,5 @@
 import sys, os
-from PyQt6.QtWidgets import QWidget, QPushButton, QFrame, QGridLayout, QLabel, QFileDialog, QHBoxLayout, QVBoxLayout, QApplication, QSlider, QGraphicsScene, QGraphicsScene, QGraphicsView
+from PyQt6.QtWidgets import QWidget, QPushButton, QFrame, QGridLayout, QLabel, QFileDialog, QHBoxLayout, QVBoxLayout, QApplication, QSlider, QGraphicsScene, QGraphicsScene, QGraphicsView, QMainWindow
 from PyQt6.QtCore import Qt, QRectF
 from PyQt6.QtGui import QPixmap, QColor, QPen
 from matplotlib.backend_bases import FigureCanvasBase
@@ -55,78 +55,113 @@ class ClickableRectangle(QGraphicsRectItem):
         
 
     def mousePressEvent(self, event):
-        # Handle mouse press event
         self.Call_On_Press_Call()
         print("Rectangle Clicked!")
         self.setBrush(self.button_pressed_fill_color)
         self.setPen(QPen(self.button_released_border_color, self.button_border_width))
-        
-        # Add your custom action here
 
     def mouseReleaseEvent(self, event):
-        # Handle mouse release event
         self.setBrush(self.button_released_fill_color)
         self.setPen(QPen(self.button_released_border_color, self.button_border_width))
         print("Rectangle Released!")
         
 def Select_Input():
-    print("TEST TEST TEST")
+    print("Select_Input")
 
 
 
-class MyCanvas(QGraphicsView):
-    def __init__(self):
+
+
+
+class makeCanvas(QGraphicsView):
+    def __init__(self, x=0,y=0,w=512,h=512,r=0,g=0,b=0,a=0):
         super().__init__()
 
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
-        self.setFixedSize(1560, 800)
+        self.setScene(None)
+        #self.setFixedSize(1560, 800)
         self.buttonWidth = 128
         self.buttonHeight = 32
-
-
-        # Set the background color of the scene
-        self.scene.setBackgroundBrush(QColor(200, 200, 200))  # Set the background color to light gray
+        self.setGeometry(x, y, w, h)
+        self.scene.setBackgroundBrush(QColor(r, g, b, a))  # Set the background color to light gray
 
         # Add initial items to the scene
-        self.leftRect = QGraphicsRectItem(10, 10, 592, 592)
-        self.leftRect.setBrush(QColor(200, 200, 200))
+        """ self.leftRect = QGraphicsRectItem(10, 10, 592, 592)
+        self.leftRect.setBrush(QColor(200, 200, 200,50))
         self.scene.addItem(self.leftRect)
 
         self.centerRect = QGraphicsRectItem(612, 10, 336, 336)
-        self.centerRect.setBrush(QColor(200, 200, 200))
+        self.centerRect.setBrush(QColor(200, 200, 200,50))
         self.scene.addItem(self.centerRect)
 
         self.rightRect = QGraphicsRectItem(958, 10, 592, 592)
-        self.rightRect.setBrush(QColor(200, 200, 200))
+        self.rightRect.setBrush(QColor(200, 200, 200,50))
         self.scene.addItem(self.rightRect)
 
         self.selectInput_BTN = ClickableRectangle(10, 612, self.buttonWidth, self.buttonHeight, "Select Input", Select_Input)
-        self.scene.addItem(self.selectInput_BTN)
+        self.scene.addItem(self.selectInput_BTN) """
 
-    
 
+
+class makeSlider(QSlider):
+    def __init__(self, onValueChangeCall, label, x=0,y=0,w=512,h=32,min=0,max=100,val=50):
+        super().__init__()
+        self.setOrientation(Qt.Orientation.Horizontal)
+        self.valueChanged.connect(slider_value_changed(label))
+        self.setGeometry(x,y,w,h)
+        self.setMinimum(min)
+        self.setMaximum(max)
+        self.setValue(val)
+        self.valueChanged.connect(onValueChangeCall)
+        self.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.setTickInterval(1)
+        self.label = QLabel()
+        self.label.setText(label + " %d px" % self.value())
+        self.label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.label.setGeometry(x,y-h+5,w,h)
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
 
         
 
-        self.text_item = QGraphicsTextItem("Hello, PyQt!")
-        self.text_item.setPos(120, 20)
-        self.scene.addItem(self.text_item)
+        # Create the main widget
+        main_widget = QWidget()
+        self.setFixedSize(1560,800)
+
+        # Create the canvas and add it to the layout
+        leftCanvas = makeCanvas(x=10, y=10,a=20)
+        centerCanvas = makeCanvas(x=532, y=10,w=256,h=256,a=20)
+        rightCanvas = makeCanvas(x=798, y=10,w=512,h=512,a=20)
+        slider = makeSlider(self.slider_value_changed, x=10, y=550, label="TEST", )
+        slider.label.setParent(main_widget)
+
+        slider.setParent(main_widget)
+        leftCanvas.setParent(main_widget)
+        centerCanvas.setParent(main_widget)
+        rightCanvas.setParent(main_widget)
+        # Set the main widget as the central widget
+        self.setCentralWidget(main_widget)
+    
+    def slider_value_changed(label):
+        print("slider_value_changed")
+        main_window.label.setText(label + " %d px" % main_window.label.value())
 
 
-
-        # Set the initial scene rectangle size
-        #self.setSceneRect(QRectF(0, 0, 500, 200))
 
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    canvas = MyCanvas()
-    canvas.show()
+
+    # Create the main window
+    main_window = MainWindow()
+    main_window.show()
+
     sys.exit(app.exec())
-
-
 
 
 
