@@ -33,7 +33,7 @@ import sys
 
 
 class ClickableRectangle(QGraphicsRectItem):
-    def __init__(self, x, y, width, height, text):
+    def __init__(self, x, y, width, height, text, onpressCall):
         super().__init__(x, y, width, height)
 
         self.button_released_border_color = QColor(120, 120, 120)
@@ -51,10 +51,12 @@ class ClickableRectangle(QGraphicsRectItem):
         self.text_width = self.text_item.boundingRect().width()
         self.text_height = self.text_item.boundingRect().height()
         self.text_item.setPos(x+(width/2)-(self.text_width/2), y+(height/2)-(self.text_height/2))
+        self.Call_On_Press_Call = onpressCall
         
 
     def mousePressEvent(self, event):
         # Handle mouse press event
+        self.Call_On_Press_Call()
         print("Rectangle Clicked!")
         self.setBrush(self.button_pressed_fill_color)
         self.setPen(QPen(self.button_released_border_color, self.button_border_width))
@@ -66,7 +68,9 @@ class ClickableRectangle(QGraphicsRectItem):
         self.setBrush(self.button_released_fill_color)
         self.setPen(QPen(self.button_released_border_color, self.button_border_width))
         print("Rectangle Released!")
-
+        
+def Select_Input():
+    print("TEST TEST TEST")
 
 
 
@@ -97,7 +101,7 @@ class MyCanvas(QGraphicsView):
         self.rightRect.setBrush(QColor(200, 200, 200))
         self.scene.addItem(self.rightRect)
 
-        self.selectInput_BTN = ClickableRectangle(10, 612, self.buttonWidth, self.buttonHeight, "Select Input")
+        self.selectInput_BTN = ClickableRectangle(10, 612, self.buttonWidth, self.buttonHeight, "Select Input", Select_Input)
         self.scene.addItem(self.selectInput_BTN)
 
     
