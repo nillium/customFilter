@@ -24,69 +24,18 @@ from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtCore import Qt, QRectF
 import sys
 
-class ClickableRectangle(QGraphicsRectItem):
-    def __init__(self, x, y, width, height, text, onpressCall):
-        super().__init__(x, y, width, height)
-
-        self.button_released_border_color = QColor(120, 120, 120)
-        self.button_pressed_border_color = QColor(0, 0, 255)
-        self.button_released_fill_color = QColor(220, 220, 220)
-        self.button_pressed_fill_color = QColor(240, 240, 240)
-        self.button_border_width = 1
-        self.text_color = QColor(30, 30, 30)
-
-        self.setBrush(self.button_released_fill_color)  # Set the rectangle's fill color
-        self.setPen(QPen(self.button_released_border_color, self.button_border_width))
-
-        self.text_item = QGraphicsTextItem(text, parent=self)
-        self.text_item.setDefaultTextColor(self.text_color)
-        self.text_width = self.text_item.boundingRect().width()
-        self.text_height = self.text_item.boundingRect().height()
-        self.text_item.setPos(x+(width/2)-(self.text_width/2), y+(height/2)-(self.text_height/2))
-        self.Call_On_Press_Call = onpressCall
-        
-    def mousePressEvent(self, event):
-        self.Call_On_Press_Call()
-        print("Rectangle Clicked!")
-        self.setBrush(self.button_pressed_fill_color)
-        self.setPen(QPen(self.button_released_border_color, self.button_border_width))
-
-    def mouseReleaseEvent(self, event):
-        self.setBrush(self.button_released_fill_color)
-        self.setPen(QPen(self.button_released_border_color, self.button_border_width))
-        print("Rectangle Released!")
-        
-def Select_Input():
-    print("Select_Input")
-
-
 class makeCanvas(QGraphicsView):
     def __init__(self, x=0,y=0,w=512,h=512,r=0,g=0,b=0,a=0):
+        
         super().__init__()
 
-        self.scene = QGraphicsScene(self)
+        self.scene = QGraphicsScene()
         self.setScene(self.scene)
-        self.setScene(None)
-        #self.setFixedSize(1560, 800)
-        
+        self.setBackgroundBrush(QColor(r, g, b, a))
         self.setGeometry(x, y, w, h)
         self.scene.setBackgroundBrush(QColor(r, g, b, a))  # Set the background color to light gray
+        self.setParent(main_window.main_widget)
 
-        # Add initial items to the scene
-        """ self.leftRect = QGraphicsRectItem(10, 10, 592, 592)
-        self.leftRect.setBrush(QColor(200, 200, 200,50))
-        self.scene.addItem(self.leftRect)
-
-        self.centerRect = QGraphicsRectItem(612, 10, 336, 336)
-        self.centerRect.setBrush(QColor(200, 200, 200,50))
-        self.scene.addItem(self.centerRect)
-
-        self.rightRect = QGraphicsRectItem(958, 10, 592, 592)
-        self.rightRect.setBrush(QColor(200, 200, 200,50))
-        self.scene.addItem(self.rightRect)
-
-        self.selectInput_BTN = ClickableRectangle(10, 612, self.buttonWidth, self.buttonHeight, "Select Input", Select_Input)
-        self.scene.addItem(self.selectInput_BTN) """
 
 
 class makeSlider(QSlider):
@@ -131,15 +80,16 @@ class MainWindow(QMainWindow):
         self.setFixedSize(1560,800)
         self.setCentralWidget(self.main_widget)
 
-class loadImage:
-    def __init__(self, path):
+class loadImage(QGraphicsPixmapItem):
+    def __init__(self, path, scene):
         super().__init__()
         self.image_path = path
+        self.parent_scene = scene
         self.pixmap = QPixmap(self.image_path)
 
         if not self.pixmap.isNull():
-            pixmap_item = QGraphicsPixmapItem(self.pixmap)
-            contents.leftCanvas.scene.addItem(pixmap_item)
+            self.pixmap_item = self.pixmap
+            self.parent_scene.addItem(self)
         else:
             print(f"Error loading image from {self.image_path}")
 
@@ -148,18 +98,18 @@ class Contents:
     def __init__(self):
         super().__init__()
     def make(self):
-        self.leftCanvas = makeCanvas(x=10, y=10,a=20)
-        self.centerCanvas = makeCanvas(x=532, y=10,w=256,h=256,a=20)
-        self.rightCanvas = makeCanvas(x=798, y=10,w=512,h=512,a=20)
+        self.leftCanvas = makeCanvas(x=10, y=10, r=200, a=0)
+        self.centerCanvas = makeCanvas(x=532, y=10,w=256,h=256)
+        self.rightCanvas = makeCanvas(x=798, y=10,w=512,h=512)
         self.change_input_BTN = makeButton("Change Input", self.change_input_press, x=10, y=532)
         #self.slider = makeSlider("test label", self.slider_value_change, x=10, y=550)
         #self.slider.sliderlabel.setParent(main_window.main_widget)
         #self.slider.valueChanged.connect()
         #self.slider.setParent(main_window.main_widget)
         #self.slider.sliderlabel.setParent(main_window.main_widget)
-        self.leftCanvas.setParent(main_window.main_widget)
-        self.centerCanvas.setParent(main_window.main_widget)
-        self.rightCanvas.setParent(main_window.main_widget)
+        
+        self.input_image = loadImage("checker.png", self.leftCanvas.scene)
+       
         # Set the main widget as the central widget
 
     def slider_value_change(self, label):
