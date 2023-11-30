@@ -81,8 +81,7 @@ class makeCanvas(QGraphicsView):
         self.setScene(self.scene)
         self.setScene(None)
         #self.setFixedSize(1560, 800)
-        self.buttonWidth = 128
-        self.buttonHeight = 32
+        
         self.setGeometry(x, y, w, h)
         self.scene.setBackgroundBrush(QColor(r, g, b, a))  # Set the background color to light gray
 
@@ -105,53 +104,74 @@ class makeCanvas(QGraphicsView):
 
 
 class makeSlider(QSlider):
-    def __init__(self, onValueChangeCall, label, x=0,y=0,w=512,h=32,min=0,max=100,val=50):
+    def __init__(self, label, call_on_change, x=0,y=0,w=512,h=32,min=0,max=100,val=50):
         super().__init__()
+        self.label = label
+        self.call_on_change = call_on_change
         self.setOrientation(Qt.Orientation.Horizontal)
-        self.valueChanged.connect(slider_value_changed(label))
         self.setGeometry(x,y,w,h)
         self.setMinimum(min)
         self.setMaximum(max)
         self.setValue(val)
-        self.valueChanged.connect(onValueChangeCall)
+        self.valueChanged.connect(self.callWrapper)
         self.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.setTickInterval(1)
-        self.label = QLabel()
-        self.label.setText(label + " %d px" % self.value())
-        self.label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.label.setGeometry(x,y-h+5,w,h)
+        self.sliderlabel = QLabel()
+        self.sliderlabel.setText(self.label + " %d px" % self.value())
+        self.sliderlabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.sliderlabel.setGeometry(x,y-h+5,w,h)
+    
+    def callWrapper(self):
+        self.call_on_change(self.label)
+
+
+class Button(QPushButton):
+    def __init__(self, label, call_on_press, x=0,y=0,w=128,h=32):
+        self.label = label
+        self.call_on_press = call_on_press
+        super().__init__()
+        self.button = QPushButton('Change Input', self)
+        self.setGeometry(x,y,w,h)
+        self.clicked.connect(self.call_on_press)
+
+
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
-        
-
         # Create the main widget
-        main_widget = QWidget()
+        self.main_widget = QWidget()
         self.setFixedSize(1560,800)
+        self.setCentralWidget(self.main_widget)
 
-        # Create the canvas and add it to the layout
+
+
+
+
+class Contents:
+    def __init__(self):
+        super().__init__()
+    
+
+
+    def make(self):
         leftCanvas = makeCanvas(x=10, y=10,a=20)
         centerCanvas = makeCanvas(x=532, y=10,w=256,h=256,a=20)
         rightCanvas = makeCanvas(x=798, y=10,w=512,h=512,a=20)
-        slider = makeSlider(self.slider_value_changed, x=10, y=550, label="TEST", )
-        slider.label.setParent(main_widget)
-
-        slider.setParent(main_widget)
-        leftCanvas.setParent(main_widget)
-        centerCanvas.setParent(main_widget)
-        rightCanvas.setParent(main_widget)
+        self.slider = makeSlider("test label", self.slider_value_changed, x=10, y=550)
+        self.slider.sliderlabel.setParent(main_window.main_widget)
+        #self.slider.valueChanged.connect()
+        self.slider.setParent(main_window.main_widget)
+        self.slider.sliderlabel.setParent(main_window.main_widget)
+        leftCanvas.setParent(main_window.main_widget)
+        centerCanvas.setParent(main_window.main_widget)
+        rightCanvas.setParent(main_window.main_widget)
         # Set the main widget as the central widget
-        self.setCentralWidget(main_widget)
-    
-    def slider_value_changed(label):
+
+    def slider_value_changed(self, label):
         print("slider_value_changed")
-        main_window.label.setText(label + " %d px" % main_window.label.value())
-
-
-
+        self.slider.sliderlabel.setText(label + ": %s" % str(self.slider.value()))
 
 
 if __name__ == "__main__":
@@ -159,8 +179,10 @@ if __name__ == "__main__":
 
     # Create the main window
     main_window = MainWindow()
+    
+    contents = Contents()
+    contents.make()
     main_window.show()
-
     sys.exit(app.exec())
 
 
