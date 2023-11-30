@@ -9,7 +9,6 @@ import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-
 import keras.backend as K
 import numpy as np
 from keras import Input, layers, initializers
@@ -17,20 +16,13 @@ from keras.models import Model
 from matplotlib import pyplot as plt
 import tensorflow as tf
 from tensorflow import keras
-
-
-
 from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsRectItem
 from PyQt6.QtCore import Qt
 import sys
-
-
-
 from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsRectItem, QGraphicsTextItem, QGraphicsEllipseItem, QGraphicsPixmapItem
 from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtCore import Qt, QRectF
 import sys
-
 
 class ClickableRectangle(QGraphicsRectItem):
     def __init__(self, x, y, width, height, text, onpressCall):
@@ -53,7 +45,6 @@ class ClickableRectangle(QGraphicsRectItem):
         self.text_item.setPos(x+(width/2)-(self.text_width/2), y+(height/2)-(self.text_height/2))
         self.Call_On_Press_Call = onpressCall
         
-
     def mousePressEvent(self, event):
         self.Call_On_Press_Call()
         print("Rectangle Clicked!")
@@ -67,10 +58,6 @@ class ClickableRectangle(QGraphicsRectItem):
         
 def Select_Input():
     print("Select_Input")
-
-
-
-
 
 
 class makeCanvas(QGraphicsView):
@@ -102,7 +89,6 @@ class makeCanvas(QGraphicsView):
         self.scene.addItem(self.selectInput_BTN) """
 
 
-
 class makeSlider(QSlider):
     def __init__(self, label, call_on_change, x=0,y=0,w=512,h=32,min=0,max=100,val=50):
         super().__init__()
@@ -117,24 +103,24 @@ class makeSlider(QSlider):
         self.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.setTickInterval(1)
         self.sliderlabel = QLabel()
-        self.sliderlabel.setText(self.label + " %d px" % self.value())
+        self.sliderlabel.setText(self.label + " %d" % self.value())
         self.sliderlabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.sliderlabel.setGeometry(x,y-h+5,w,h)
-    
+        self.setParent(main_window.main_widget)
+        self.sliderlabel.setParent(main_window.main_widget)
     def callWrapper(self):
         self.call_on_change(self.label)
 
 
-class Button(QPushButton):
+class makeButton(QPushButton):
     def __init__(self, label, call_on_press, x=0,y=0,w=128,h=32):
+        super().__init__()
         self.label = label
         self.call_on_press = call_on_press
-        super().__init__()
-        self.button = QPushButton('Change Input', self)
+        self.setText(label)
         self.setGeometry(x,y,w,h)
         self.clicked.connect(self.call_on_press)
-
-
+        self.setParent(main_window.main_widget)
 
 
 class MainWindow(QMainWindow):
@@ -145,33 +131,44 @@ class MainWindow(QMainWindow):
         self.setFixedSize(1560,800)
         self.setCentralWidget(self.main_widget)
 
+class loadImage:
+    def __init__(self, path):
+        super().__init__()
+        self.image_path = path
+        self.pixmap = QPixmap(self.image_path)
 
-
+        if not self.pixmap.isNull():
+            pixmap_item = QGraphicsPixmapItem(self.pixmap)
+            contents.leftCanvas.scene.addItem(pixmap_item)
+        else:
+            print(f"Error loading image from {self.image_path}")
 
 
 class Contents:
     def __init__(self):
         super().__init__()
-    
-
-
     def make(self):
-        leftCanvas = makeCanvas(x=10, y=10,a=20)
-        centerCanvas = makeCanvas(x=532, y=10,w=256,h=256,a=20)
-        rightCanvas = makeCanvas(x=798, y=10,w=512,h=512,a=20)
-        self.slider = makeSlider("test label", self.slider_value_changed, x=10, y=550)
-        self.slider.sliderlabel.setParent(main_window.main_widget)
+        self.leftCanvas = makeCanvas(x=10, y=10,a=20)
+        self.centerCanvas = makeCanvas(x=532, y=10,w=256,h=256,a=20)
+        self.rightCanvas = makeCanvas(x=798, y=10,w=512,h=512,a=20)
+        self.change_input_BTN = makeButton("Change Input", self.change_input_press, x=10, y=532)
+        #self.slider = makeSlider("test label", self.slider_value_change, x=10, y=550)
+        #self.slider.sliderlabel.setParent(main_window.main_widget)
         #self.slider.valueChanged.connect()
-        self.slider.setParent(main_window.main_widget)
-        self.slider.sliderlabel.setParent(main_window.main_widget)
-        leftCanvas.setParent(main_window.main_widget)
-        centerCanvas.setParent(main_window.main_widget)
-        rightCanvas.setParent(main_window.main_widget)
+        #self.slider.setParent(main_window.main_widget)
+        #self.slider.sliderlabel.setParent(main_window.main_widget)
+        self.leftCanvas.setParent(main_window.main_widget)
+        self.centerCanvas.setParent(main_window.main_widget)
+        self.rightCanvas.setParent(main_window.main_widget)
         # Set the main widget as the central widget
 
-    def slider_value_changed(self, label):
-        print("slider_value_changed")
-        self.slider.sliderlabel.setText(label + ": %s" % str(self.slider.value()))
+    def slider_value_change(self, label):
+        print("slider_value_change")
+        self.slider.sliderlabel.setText(label + ": %d" % self.slider.value())
+    
+    def change_input_press(self):
+        print("change_input_press")
+        
 
 
 if __name__ == "__main__":
