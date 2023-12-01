@@ -1,7 +1,7 @@
 import sys, os
 from PyQt6.QtWidgets import QWidget, QPushButton, QFrame, QGridLayout, QLabel, QFileDialog, QHBoxLayout, QVBoxLayout, QApplication, QSlider, QGraphicsScene, QGraphicsScene, QGraphicsView, QMainWindow
 from PyQt6.QtCore import Qt, QRectF
-from PyQt6.QtGui import QPixmap, QColor, QPen
+from PyQt6.QtGui import QPixmap, QColor, QPen, QImage
 from matplotlib.backend_bases import FigureCanvasBase
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
@@ -156,7 +156,10 @@ class Contents:
         #self.rightCanvas = makeCanvas(x=798, y=10,w=512,h=512)^
         self.label_left = makeLabel(image_source_type="file", image_source="checker.png", x=10, y=10, w=512, h=512)
         self.label_center = makeLabel(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=10, w=256, h=256)
+        self.label_right = makeLabel(image_source_type="file", image_source="checker.png", x=798, y=10, w=512, h=512)
         self.change_input_BTN = makeButton("Change Input", self.change_input_press, x=10, y=532)
+        self.custom_filter_BTN = makeButton("Load Custom Filter", self.custom_filter_press, x=532, y=276, w=256)
+        self.random_filter_BTN = makeButton("Random Filter", self.random_filter_press, x=532, y=276+42, w=256)
         #self.slider = makeSlider("test label", self.slider_value_change, x=10, y=550)
         #self.slider.sliderlabel.setParent(main_window.main_widget)
         #self.slider.valueChanged.connect()
@@ -176,25 +179,47 @@ class Contents:
         print("slider_value_change")
         #self.slider.sliderlabel.setText(label + ": %d" % self.slider.value())
     
-    def change_image(self, label_name):
-        file_type_filter = 'Image File (*.png *.jpg)'
-        response = QFileDialog.getOpenFileName(
-            parent=main_window.main_widget,
-            caption='Select a file',
-            directory=os.getcwd(),
-            filter=file_type_filter,
-            initialFilter='Image File (*.png *.jpg)')
-        file_dialog = QFileDialog()
-        file_dialog.setWindowTitle('Open File')
-        image_path = response[0]
-        self.items[label_name].setPixmap(QPixmap(image_path))
-        #self.input = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        #self.input = cv2.resize(self.input, (512,512))
-        print(f'Selected File: {response[0]}')
+    def change_image(self, label_name, random=True):
+        
+        self.display_width = self.items[label_name].width()
+        self.display_heigth = self.items[label_name].height()
+
+        if not random:
+            file_type_filter = 'Image File (*.png *.jpg)'
+            response = QFileDialog.getOpenFileName(
+                parent=main_window.main_widget,
+                caption='Select a file',
+                directory=os.getcwd(),
+                filter=file_type_filter,
+                initialFilter='Image File (*.png *.jpg)')
+            file_dialog = QFileDialog()
+            file_dialog.setWindowTitle('Open File')
+            #HANDLE EMPTY selection!
+            print(f'Selected File: {response[0]}')
+            image_path = response[0]
+            self.image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            self.image = cv2.resize(self.image, (self.display_width,self.display_heigth))
+        else:
+            self.image = np.random.randint(0, 256, size=(self.display_width, self.display_heigth), dtype=np.uint8)
+        
+        self.display_image = QImage(self.image, self.display_width, self.display_heigth, (1*self.display_width), QImage.Format.Format_Grayscale8)
+            
+        self.display_pixmap = QPixmap.fromImage(self.display_image)
+        self.items[label_name].setPixmap(self.display_pixmap)
+        
 
     def change_input_press(self):
         print("change_input_press")
-        self.change_image("label_left")
+        self.change_image("label_center")
+    
+    def custom_filter_press(self):
+        print("change_input_press")
+        self.change_image("label_center", False)
+
+    def random_filter_press(self):
+        print("change_input_press")
+        
+        self.change_image("label_center")
         
 
 
