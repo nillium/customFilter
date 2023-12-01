@@ -24,7 +24,57 @@ from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtCore import Qt, QRectF
 import sys
 
-class makeCanvas(QGraphicsView):
+class makeLabel(QLabel):
+    def __init__(self, label_text=None, alignment="center", image_source_type="file", image_source=None, x=0, y=0, w=128, h=32):
+        
+        super().__init__()
+
+        self.setGeometry(x, y, w, h)
+        self.setStyleSheet("background-color: lightgray; border: 1px solid #cccccc; padding: 0px;")
+        
+        if not label_text == None:
+            self.setText(label_text)
+
+        if not ((alignment == "center") or (alignment == "right") or (alignment == "left")):
+            print("Wrong label alignment option: Choose either left or right or center.")
+        
+        if not ((image_source_type == "file") or (image_source_type == "array")):
+            print("Wrong image source type option: Choose either file or array.")
+
+        if alignment == "center":
+            self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        if alignment == "left":
+            self.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        if alignment == "right":
+            self.setAlignment(Qt.AlignmentFlag.AlignRight)
+        
+        self.setGeometry(x,y,w,h)
+
+        if not image_source==None:
+            
+            #image_source: path if file, array name if array.
+            self.pixmap = QPixmap(image_source)
+            
+            if image_source_type == "file":
+                
+                if not self.pixmap.isNull():
+                    self.setPixmap(self.pixmap)
+                    self.setParent(main_window.main_widget)
+                else:
+                    print(f"Error loading image from {image_source}")
+            
+            if image_source_type == "array":
+
+                if not self.pixmap.isNull():
+                    self.setPixmap(self.pixmap)
+                    self.setParent(main_window.main_widget)
+                else:
+                    print(f"Error loading image from array. Is array defined?")
+        
+        self.setParent(main_window.main_widget)
+
+
+""" class makeCanvas(QGraphicsView):
     def __init__(self, x=0,y=0,w=512,h=512,r=0,g=0,b=0,a=0):
         
         super().__init__()
@@ -34,8 +84,7 @@ class makeCanvas(QGraphicsView):
         self.setBackgroundBrush(QColor(r, g, b, a))
         self.setGeometry(x, y, w, h)
         self.scene.setBackgroundBrush(QColor(r, g, b, a))  # Set the background color to light gray
-        self.setParent(main_window.main_widget)
-
+        self.setParent(main_window.main_widget) """
 
 
 class makeSlider(QSlider):
@@ -86,6 +135,7 @@ class loadImage(QGraphicsPixmapItem):
         self.image_path = path
         self.parent_scene = scene
         self.pixmap = QPixmap(self.image_path)
+        
 
         if not self.pixmap.isNull():
             self.pixmap_item = self.pixmap
@@ -98,9 +148,14 @@ class Contents:
     def __init__(self):
         super().__init__()
     def make(self):
-        self.leftCanvas = makeCanvas(x=10, y=10, r=200, a=0)
-        self.centerCanvas = makeCanvas(x=532, y=10,w=256,h=256)
-        self.rightCanvas = makeCanvas(x=798, y=10,w=512,h=512)
+        
+
+        #self.items[label_left] = makeLabel(image_source_type="file", image_source="checker.png", x=10, y=10, w=512, h=512)
+        #self.leftCanvas = makeCanvas(x=10, y=10, r=200, a=0)
+        #self.centerCanvas = makeCanvas(x=532, y=10,w=256,h=256)
+        #self.rightCanvas = makeCanvas(x=798, y=10,w=512,h=512)^
+        self.label_left = makeLabel(image_source_type="file", image_source="checker.png", x=10, y=10, w=512, h=512)
+        self.label_center = makeLabel(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=10, w=256, h=256)
         self.change_input_BTN = makeButton("Change Input", self.change_input_press, x=10, y=532)
         #self.slider = makeSlider("test label", self.slider_value_change, x=10, y=550)
         #self.slider.sliderlabel.setParent(main_window.main_widget)
@@ -108,17 +163,40 @@ class Contents:
         #self.slider.setParent(main_window.main_widget)
         #self.slider.sliderlabel.setParent(main_window.main_widget)
         
-        self.input_image = loadImage("checker.png", self.leftCanvas.scene)
+        #self.input_image = loadImage("checker.png", self.leftCanvas.scene)
        
-        # Set the main widget as the central widget
+       
+        self.items={
+            "label_left" : self.label_left,
+            "label_center" : self.label_center
+        }
+    
 
     def slider_value_change(self, label):
         print("slider_value_change")
-        self.slider.sliderlabel.setText(label + ": %d" % self.slider.value())
+        #self.slider.sliderlabel.setText(label + ": %d" % self.slider.value())
     
+    def change_image(self, label_name):
+        file_type_filter = 'Image File (*.png *.jpg)'
+        response = QFileDialog.getOpenFileName(
+            parent=main_window.main_widget,
+            caption='Select a file',
+            directory=os.getcwd(),
+            filter=file_type_filter,
+            initialFilter='Image File (*.png *.jpg)')
+        file_dialog = QFileDialog()
+        file_dialog.setWindowTitle('Open File')
+        image_path = response[0]
+        self.items[label_name].setPixmap(QPixmap(image_path))
+        #self.input = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        #self.input = cv2.resize(self.input, (512,512))
+        print(f'Selected File: {response[0]}')
+
     def change_input_press(self):
         print("change_input_press")
+        self.change_image("label_left")
         
+
 
 
 if __name__ == "__main__":
