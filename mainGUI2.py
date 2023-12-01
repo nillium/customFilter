@@ -90,24 +90,28 @@ class makeLabel(QLabel):
 class makeSlider(QSlider):
     def __init__(self, label, call_on_change, x=0,y=0,w=512,h=32,min=0,max=100,val=50):
         super().__init__()
-        self.label = label
-        self.call_on_change = call_on_change
+        self.sliderlabel = QLabel()
+
         self.setOrientation(Qt.Orientation.Horizontal)
         self.setGeometry(x,y,w,h)
         self.setMinimum(min)
         self.setMaximum(max)
         self.setValue(val)
-        self.valueChanged.connect(self.callWrapper)
         self.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.setTickInterval(1)
-        self.sliderlabel = QLabel()
-        self.sliderlabel.setText(self.label + " %d" % self.value())
+        
+
+        self.sliderlabel.setText(label + " %d" % self.value())
+        self.call_on_change = call_on_change
+        
+        self.valueChanged.connect(call_on_change)
+        
         self.sliderlabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.sliderlabel.setGeometry(x,y-h+5,w,h)
+
         self.setParent(main_window.main_widget)
-        self.sliderlabel.setParent(main_window.main_widget)
-    def callWrapper(self):
-        self.call_on_change(self.label)
+        self.setParent(self)
+   
 
 
 class makeButton(QPushButton):
@@ -160,7 +164,8 @@ class Contents:
         self.change_input_BTN = makeButton("Change Input", self.change_input_press, x=10, y=532)
         self.custom_filter_BTN = makeButton("Load Custom Filter", self.custom_filter_press, x=532, y=276, w=256)
         self.random_filter_BTN = makeButton("Random Filter", self.random_filter_press, x=532, y=276+42, w=256)
-        #self.slider = makeSlider("test label", self.slider_value_change, x=10, y=550)
+        self.convolute_BTN = makeButton("--> Convolute -->", self.convolute_press, x=532, y=276+42+42, w=256)
+        self.filter_size_SLDR = makeSlider("Filter Size", self.filter_size_SLDR_value_change, x=532, y=276+42+42+42, w=256, min=2, max=64, val=8)
         #self.slider.sliderlabel.setParent(main_window.main_widget)
         #self.slider.valueChanged.connect()
         #self.slider.setParent(main_window.main_widget)
@@ -171,13 +176,14 @@ class Contents:
        
         self.items={
             "label_left" : self.label_left,
-            "label_center" : self.label_center
+            "label_center" : self.label_center,
+            "filter_size_SLDR" : self.filter_size_SLDR
         }
     
 
-    def slider_value_change(self, label):
+    def filter_size_SLDR_value_change(self):
         print("slider_value_change")
-        #self.slider.sliderlabel.setText(label + ": %d" % self.slider.value())
+        self.items["filter_size_SLDR"].sliderlabel.setText("Filter Size [px] : %d" % self.filter_size_SLDR.value())
     
     def change_image(self, label_name, random=True):
         
@@ -207,22 +213,20 @@ class Contents:
         self.display_pixmap = QPixmap.fromImage(self.display_image)
         self.items[label_name].setPixmap(self.display_pixmap)
         
-
     def change_input_press(self):
         print("change_input_press")
         self.change_image("label_center")
     
     def custom_filter_press(self):
-        print("change_input_press")
+        print("custom_filter_press")
         self.change_image("label_center", False)
 
     def random_filter_press(self):
-        print("change_input_press")
-        
+        print("random_filter_press")
         self.change_image("label_center")
-        
 
-
+    def convolute_press(self):
+        print("convolute_press")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
