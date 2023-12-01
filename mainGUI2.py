@@ -1,5 +1,5 @@
 import sys, os
-from PyQt6.QtWidgets import QWidget, QPushButton, QFrame, QGridLayout, QLabel, QFileDialog, QHBoxLayout, QVBoxLayout, QApplication, QSlider, QGraphicsScene, QGraphicsScene, QGraphicsView, QMainWindow
+from PyQt6.QtWidgets import QWidget, QPushButton, QFrame, QGridLayout, QLabel, QFileDialog, QDial, QHBoxLayout, QVBoxLayout, QApplication, QSlider, QGraphicsScene, QGraphicsScene, QGraphicsView, QMainWindow
 from PyQt6.QtCore import Qt, QRectF
 from PyQt6.QtGui import QPixmap, QColor, QPen, QImage
 from matplotlib.backend_bases import FigureCanvasBase
@@ -101,7 +101,7 @@ class makeSlider(QSlider):
         self.setTickInterval(1)
         
 
-        self.sliderlabel.setText(label + " %d" % self.value())
+        self.sliderlabel.setText(label + " [px] : %d" % self.value())
         self.call_on_change = call_on_change
         
         self.valueChanged.connect(call_on_change)
@@ -110,8 +110,21 @@ class makeSlider(QSlider):
         self.sliderlabel.setGeometry(x,y-h+5,w,h)
 
         self.setParent(main_window.main_widget)
-        self.setParent(self)
-   
+        self.sliderlabel.setParent(main_window.main_widget)
+
+class makeDial(QDial):
+    def __init__(self, call_on_change, x, y, w, h, min, max, val):
+        super().__init__()
+        
+        self.setNotchesVisible(True)
+        self.setMaximum(max)
+        self.setMinimum(min)
+        self.setValue(val)
+        self.setGeometry(x,y,w,h)
+        self.setParent(main_window.main_widget)
+        self.valueChanged.connect(call_on_change)
+
+
 
 
 class makeButton(QPushButton):
@@ -159,13 +172,24 @@ class Contents:
         #self.centerCanvas = makeCanvas(x=532, y=10,w=256,h=256)
         #self.rightCanvas = makeCanvas(x=798, y=10,w=512,h=512)^
         self.label_left = makeLabel(image_source_type="file", image_source="checker.png", x=10, y=10, w=512, h=512)
-        self.label_center = makeLabel(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=10, w=256, h=256)
+        self.label_center_top = makeLabel(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=10, w=256, h=256)
+        self.label_center_bot = makeLabel(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=316+64+10, w=256, h=256)
         self.label_right = makeLabel(image_source_type="file", image_source="checker.png", x=798, y=10, w=512, h=512)
+        
         self.change_input_BTN = makeButton("Change Input", self.change_input_press, x=10, y=532)
-        self.custom_filter_BTN = makeButton("Load Custom Filter", self.custom_filter_press, x=532, y=276, w=256)
-        self.random_filter_BTN = makeButton("Random Filter", self.random_filter_press, x=532, y=276+42, w=256)
-        self.convolute_BTN = makeButton("--> Convolute -->", self.convolute_press, x=532, y=276+42+42, w=256)
-        self.filter_size_SLDR = makeSlider("Filter Size", self.filter_size_SLDR_value_change, x=532, y=276+42+42+42, w=256, min=2, max=64, val=8)
+
+        
+        #self.filter_size_SLDR = makeSlider("Filter Size", self.filter_size_SLDR_value_change, x=532, y=296, w=256, min=2, max=64, val=8)
+        self.custom_filter_BTN = makeButton("Load Custom Filter", self.custom_filter_press, x=532, y=276, w=256, h=28)
+        
+        self.random_filter_BTN = makeButton("Random", self.random_filter_press, x=728, y=316, w=60, h=28)
+        self.invert_filter_BTN = makeButton("Invert", self.invert_filter_press, x=728, y=316+64-28, w=60, h=28)
+        #self.convolute_BTN = makeButton("--> Convolute -->", self.convolute_press, x=532, y=276+64+42+42, w=256)
+
+        self.filter_size_DIAL = makeDial(self.filter_size_DIAL_value_change, 532, 316, 64, 64, 2, 64, 32)
+        self.white_treshold_DIAL = makeDial(self.white_treshold_DIAL_value_change, 532+64, 316, 64, 64, 0, 126, 64)
+        self.black_treshold_DIAL = makeDial(self.black_treshold_DIAL_value_change, 532+128, 316, 64, 64, 0, 126, 255)
+        
         #self.slider.sliderlabel.setParent(main_window.main_widget)
         #self.slider.valueChanged.connect()
         #self.slider.setParent(main_window.main_widget)
@@ -176,21 +200,20 @@ class Contents:
        
         self.items={
             "label_left" : self.label_left,
-            "label_center" : self.label_center,
-            "filter_size_SLDR" : self.filter_size_SLDR
+            "label_center_top" : self.label_center_top,
+            "label_center_bot" : self.label_center_bot
+            #"filter_size_SLDR" : self.filter_size_SLDR
         }
     
 
-    def filter_size_SLDR_value_change(self):
-        print("slider_value_change")
-        self.items["filter_size_SLDR"].sliderlabel.setText("Filter Size [px] : %d" % self.filter_size_SLDR.value())
     
-    def change_image(self, label_name, random=True):
+    
+    def change_image(self, label_name, random=True, invert=False, black_treshold_change = False, filter_update=False, filter_size=None):
         
         self.display_width = self.items[label_name].width()
         self.display_heigth = self.items[label_name].height()
 
-        if not random:
+        if not random and not invert and not black_treshold_change:
             file_type_filter = 'Image File (*.png *.jpg)'
             response = QFileDialog.getOpenFileName(
                 parent=main_window.main_widget,
@@ -205,8 +228,20 @@ class Contents:
             image_path = response[0]
             self.image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
             self.image = cv2.resize(self.image, (self.display_width,self.display_heigth))
-        else:
-            self.image = np.random.randint(0, 256, size=(self.display_width, self.display_heigth), dtype=np.uint8)
+        if random and not invert and not black_treshold_change:
+            self.image = np.random.randint(0, 256, size=(filter_size, filter_size), dtype=np.uint8)
+            self.image = cv2.resize(self.image, (self.display_width,self.display_heigth), interpolation = cv2.INTER_NEAREST)
+            ret1,self.image = cv2.threshold(self.image,0,self.black_treshold_DIAL.value(),cv2.THRESH_BINARY)
+        
+        if not random and invert and not black_treshold_change:
+            self.image = cv2.bitwise_not(self.image)
+            ret1,self.image = cv2.threshold(self.image,0,self.black_treshold_DIAL.value(),cv2.THRESH_BINARY)
+
+    
+        if black_treshold_change and not random and not invert:
+            pass
+
+
         
         self.display_image = QImage(self.image, self.display_width, self.display_heigth, (1*self.display_width), QImage.Format.Format_Grayscale8)
             
@@ -215,18 +250,41 @@ class Contents:
         
     def change_input_press(self):
         print("change_input_press")
-        self.change_image("label_center")
+        self.change_image("label_left")
     
     def custom_filter_press(self):
         print("custom_filter_press")
-        self.change_image("label_center", False)
+        self.change_image("label_center_top", False)
 
     def random_filter_press(self):
         print("random_filter_press")
-        self.change_image("label_center")
+        
+        self.change_image("label_center_bot", random=True, filter_update=True, filter_size=self.filter_size_DIAL.value())
+    
+    def invert_filter_press(self):
+        print("invert_filter_press")
+        self.change_image("label_center_bot", invert=True, random=False, filter_update=True, filter_size=self.filter_size_DIAL.value())
 
     def convolute_press(self):
         print("convolute_press")
+
+    def filter_size_SLDR_value_change(self):
+        self.items["filter_size_SLDR"].sliderlabel.setText("Filter Size [px] : %d" % self.filter_size_SLDR.value())
+
+    def filter_size_DIAL_value_change(self):
+        print("filter_size_DIAL_value_change")
+    
+    def white_treshold_DIAL_value_change(self):
+        print("white_treshold_DIAL_value_change")
+    
+    def black_treshold_DIAL_value_change(self):
+        print("black_treshold_DIAL_value_change")
+        
+        self.change_image("label_center_bot", invert=False, random=False, black_treshold_change=True, filter_update=True, filter_size=self.filter_size_DIAL.value())
+        #ret2,minus = cv2.threshold(self.customfilter,self.lowerTreshold,127,cv2.THRESH_BINARY)
+
+
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
