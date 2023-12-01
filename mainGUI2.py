@@ -173,7 +173,7 @@ class Contents:
         #self.rightCanvas = makeCanvas(x=798, y=10,w=512,h=512)^
         self.label_left = makeLabel(image_source_type="file", image_source="checker.png", x=10, y=10, w=512, h=512)
         self.label_center_top = makeLabel(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=10, w=256, h=256)
-        self.label_center_bot = makeLabel(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=316+64+10, w=256, h=256)
+        self.label_center_bot = makeLabel(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=316+64+10+38, w=256, h=256)
         self.label_right = makeLabel(image_source_type="file", image_source="checker.png", x=798, y=10, w=512, h=512)
         
         self.change_input_BTN = makeButton("Change Input", self.change_input_press, x=10, y=532)
@@ -181,6 +181,8 @@ class Contents:
         
         #self.filter_size_SLDR = makeSlider("Filter Size", self.filter_size_SLDR_value_change, x=532, y=296, w=256, min=2, max=64, val=8)
         self.custom_filter_BTN = makeButton("Load Custom Filter", self.custom_filter_press, x=532, y=276, w=256, h=28)
+        self.process_filter_BTN = makeButton("Process Filter", self.process_filter_press, x=532, y=316+64+10, w=256, h=28)
+        self.convolute_BTN = makeButton("Convolute", self.convolute_press, x=532, y=316+64+312, w=256, h=28)
         
         self.random_filter_BTN = makeButton("Random", self.random_filter_press, x=728, y=316, w=60, h=28)
         self.invert_filter_BTN = makeButton("Invert", self.invert_filter_press, x=728, y=316+64-28, w=60, h=28)
@@ -208,12 +210,12 @@ class Contents:
 
     
     
-    def change_image(self, label_name, random=True, invert=False, black_treshold_change = False, filter_update=False, filter_size=None):
+    def change_image(self, label_name, random=True, new=False, process=True, invert=False, filter_size=8, white_treshold=192, black_treshold=64):
         
         self.display_width = self.items[label_name].width()
         self.display_heigth = self.items[label_name].height()
 
-        if not random and not invert and not black_treshold_change:
+        if not random and new and not process:
             file_type_filter = 'Image File (*.png *.jpg)'
             response = QFileDialog.getOpenFileName(
                 parent=main_window.main_widget,
@@ -228,16 +230,23 @@ class Contents:
             image_path = response[0]
             self.image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
             self.image = cv2.resize(self.image, (self.display_width,self.display_heigth))
-        if random and not invert and not black_treshold_change:
+        if random and new and not process:
             self.image = np.random.randint(0, 256, size=(filter_size, filter_size), dtype=np.uint8)
             self.image = cv2.resize(self.image, (self.display_width,self.display_heigth), interpolation = cv2.INTER_NEAREST)
-            ret1,self.image = cv2.threshold(self.image,0,self.black_treshold_DIAL.value(),cv2.THRESH_BINARY)
+            
         
-        if not random and invert and not black_treshold_change:
-            self.image = cv2.bitwise_not(self.image)
-            ret1,self.image = cv2.threshold(self.image,0,self.black_treshold_DIAL.value(),cv2.THRESH_BINARY)
+        if not random and not new and process:
 
-    
+            if invert:
+                self.image = cv2.bitwise_not(self.image)
+            
+            self.image = cv2.resize(self.image, (self.display_width,self.display_heigth), interpolation = cv2.INTER_NEAREST)
+            
+            ret1,self.image = cv2.threshold(self.image,0,self.black_treshold_DIAL.value(),cv2.THRESH_BINARY)
+                      
+            ret1,self.image_up = cv2.threshold(self.image,0,self.white_treshold_DIAL.value(),cv2.THRESH_BINARY)
+
+            ret1,self.image_down = cv2.threshold(self.image,0,self.black_treshold_DIAL.value(),cv2.THRESH_BINARY)
         if black_treshold_change and not random and not invert:
             pass
 
@@ -254,12 +263,12 @@ class Contents:
     
     def custom_filter_press(self):
         print("custom_filter_press")
-        self.change_image("label_center_top", False)
+        self.change_image("label_center_top", random=False, new=True)
 
     def random_filter_press(self):
         print("random_filter_press")
         
-        self.change_image("label_center_bot", random=True, filter_update=True, filter_size=self.filter_size_DIAL.value())
+        self.change_image("label_center_top", random=True, new=True, process=False, filter_size=self.filter_size_DIAL.value())
     
     def invert_filter_press(self):
         print("invert_filter_press")
@@ -279,8 +288,14 @@ class Contents:
     
     def black_treshold_DIAL_value_change(self):
         print("black_treshold_DIAL_value_change")
+    
+    def process_filter_press(self):
+        print("process_filter_press")
+        self.change_image("label_center_bot", filter_size=self.filter_size_DIAL.value(), white_treshold=self.white_treshold_DIAL.value(), black_treshold=self.black_treshold_DIAL.value()d )
+
+
         
-        self.change_image("label_center_bot", invert=False, random=False, black_treshold_change=True, filter_update=True, filter_size=self.filter_size_DIAL.value())
+        #self.change_image("label_center_bot", invert=False, random=False, black_treshold_change=True, filter_update=True, filter_size=self.filter_size_DIAL.value())
         #ret2,minus = cv2.threshold(self.customfilter,self.lowerTreshold,127,cv2.THRESH_BINARY)
 
 
