@@ -36,7 +36,7 @@ class maker_main(QLabel):
                 self.setAlignment(Qt.AlignmentFlag.AlignRight)
 
 
-    class make_image_container(Self,QLabel):
+    class make_image_container(QLabel):
         def __init__(self, image=None, x=0, y=0, w=128, h=32, parent=None):
             super().__init__()
             self.setGeometry(x, y, w, h)
@@ -71,7 +71,7 @@ class maker_main(QLabel):
 
 
     class MainWindow(QMainWindow):
-        def __init__(self, center=True, w, h):
+        def __init__(self, center=True, w=800, h=600):
             super().__init__()
             self.main_widget = QWidget()
             self.setFixedSize(w,h)
