@@ -13,48 +13,37 @@ from keras.models import Model, Sequential
 #Others
 import numpy as np
 import cv2
+#Custom Scripts
+import Maker
 
 class Contents:
     def __init__(self):
         super().__init__()
-    def make(self):
-        
+        self.maker = Maker()
+    
+       
+        self.image_container_left = self.maker
 
-        #self.items[label_left] = makeLabel(image_source_type="file", image_source="checker.png", x=10, y=10, w=512, h=512)
-        #self.leftCanvas = makeCanvas(x=10, y=10, r=200, a=0)
-        #self.centerCanvas = makeCanvas(x=532, y=10,w=256,h=256)
-        #self.rightCanvas = makeCanvas(x=798, y=10,w=512,h=512)^
-        self.image_container_left = make_image_container(image_source_type="file", image_source="checker.png", x=10, y=10, w=512, h=512)
+        
+        
+        
+        (image_source_type="file", image_source="checker.png", x=10, y=10, w=512, h=512)
         self.image_container_center_top = make_image_container(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=10, w=256, h=256)
         self.image_container_center_bot = make_image_container(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=428, w=256, h=256)
         self.image_container_right = make_image_container(image_source_type="file", image_source="checker.png", x=798, y=10, w=512, h=512)
         
         self.change_input_BTN = makeButton("Change Input", self.change_input_press, x=10, y=532)
-
-        
-        #self.filter_size_SLDR = makeSlider("Filter Size", self.filter_size_SLDR_value_change, x=532, y=296, w=256, min=2, max=64, val=8)
         self.custom_filter_BTN = makeButton("Load Custom Filter", self.custom_filter_press, x=668, y=276, w=120, h=28)
-        #self.process_filter_BTN = makeButton("Process Filter", self.process_filter_press, x=532, y=316+64+10, w=256, h=28)
-        #self.convolute_BTN = makeButton("Convolute", self.convolute_press, x=532, y=316+64+312, w=256, h=28)
         
         self.random_filter_BTN = makeButton("Randomize", self.random_filter_press, x=668, y=276+38, w=120, h=28)
         self.invert_filter_BTN = makeButton("Invert", self.invert_filter_press, x=668, y=276+38+38, w=120, h=28)
         self.convolute_BTN = makeButton("Convolute", self.convolute_press, x=668, y=276+38+38+38, w=120, h=28)
-        #self.convolute_BTN = makeButton("--> Convolute -->", self.convolute_press, x=532, y=276+64+42+42, w=256)
         
         self.filter_size_indicator_label = make_label(532, 395, 128, 24, "32 px","center")
         self.filter_size_DIAL = makeDial(self.filter_size_DIAL_value_change, 532+64-48, 305, 96, 96, 2, 64, 32)
        
         self.filter_size_label = make_label(532, 278, 128, 24, "Filter Size Control","center")
-        #self.white_treshold_DIAL = makeDial(self.white_treshold_DIAL_value_change, 532+64, 316, 64, 64, 0, 255, 255)
-        #self.black_treshold_DIAL = makeDial(self.black_treshold_DIAL_value_change, 532+128, 316, 64, 64, 0, 255, 0)
-        
-        #self.slider.sliderlabel.setParent(main_window.main_widget)
-        #self.slider.valueChanged.connect()
-        #self.slider.setParent(main_window.main_widget)
-        #self.slider.sliderlabel.setParent(main_window.main_widget)
-        
-        #self.input_image = loadImage("checker.png", self.leftCanvas.scene)
+   
        
        
         self.items={
