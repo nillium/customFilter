@@ -1,202 +1,18 @@
 import sys, os
+#PYQT6 Imports
 from PyQt6.QtWidgets import QWidget, QPushButton, QFrame, QGridLayout, QLabel, QFileDialog, QDial, QGraphicsPixmapItem, QHBoxLayout, QGraphicsTextItem, QGraphicsView, QVBoxLayout, QGraphicsRectItem, QApplication, QSlider, QGraphicsScene, QGraphicsScene, QGraphicsView, QMainWindow
-from PyQt6.QtCore import Qt, QRectF
-from PyQt6.QtGui import QPixmap, QColor, QPen, QImage
-from matplotlib.backend_bases import FigureCanvasBase
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import numpy as np
-import cv2
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap, QImage
+#Tensorflow Imports
+import tensorflow as tf
+from tensorflow import keras
 import keras.backend as K
-import numpy as np
 from keras import layers, initializers
 from keras.layers import Dense, Conv2D, InputLayer, MaxPooling2D, Flatten
 from keras.models import Model, Sequential
-from matplotlib import pyplot as plt
-import tensorflow as tf
-from tensorflow import keras
-
-class make_label(QLabel):
-    def __init__(self, x, y, w, h, label_text="None", alignment="center"):
-        super().__init__()
-        
-        self.setText(label_text)
-        self.setStyleSheet("background-color: #eeeeee; border: none; padding: 0px;")
-        self.setFixedHeight(h)
-        self.setFixedWidth(w)
-        width = self.width()
-        height = self.height()
-        print("x:" + str(x))
-        print("y:" + str(y))
-        print("width:" + str(w))
-        print("height:" + str(h))
-        print("width/2:" + str(width/2))
-        print("height/2:" + str(height/2))
-        #print(round((x-(width/2))))
-        #print(round((height/2)))
-        self.setGeometry(x, y, w, h)
-        self.setParent(main_window.main_widget)
-        if alignment == "center":
-            self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        if alignment == "left":
-            self.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        if alignment == "right":
-            self.setAlignment(Qt.AlignmentFlag.AlignRight)
-
-class make_image_container(QLabel):
-    def __init__(self, label_text=None, alignment="center", image_source_type="file", image_source=None, x=0, y=0, w=128, h=32):
-        super().__init__()
-
-        self.setGeometry(x, y, w, h)
-        self.setStyleSheet("background-color: dddddd; border: 1px solid #dddddd; padding: 0px;")
-        
-        if not label_text == None:
-            self.setText(label_text)
-
-        if not ((alignment == "center") or (alignment == "right") or (alignment == "left")):
-            print("Wrong label alignment option: Choose either left or right or center.")
-        
-        if not ((image_source_type == "file") or (image_source_type == "array")):
-            print("Wrong image source type option: Choose either file or array.")
-
-        if alignment == "center":
-            self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        if alignment == "left":
-            self.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        if alignment == "right":
-            self.setAlignment(Qt.AlignmentFlag.AlignRight)
-        
-        self.setGeometry(x,y,w,h)
-
-        if not image_source==None:
-            
-            #image_source: path if file, array name if array.
-            self.pixmap = QPixmap(image_source)
-            
-            if image_source_type == "file":
-                
-                if not self.pixmap.isNull():
-                    self.setPixmap(self.pixmap)
-                    self.setParent(main_window.main_widget)
-                else:
-                    print(f"Error loading image from {image_source}")
-            
-            if image_source_type == "array":
-
-                if not self.pixmap.isNull():
-                    self.setPixmap(self.pixmap)
-                    self.setParent(main_window.main_widget)
-                else:
-                    print(f"Error loading image from array. Is array defined?")
-        
-        self.setParent(main_window.main_widget)
-
-
-""" class makeCanvas(QGraphicsView):
-    def __init__(self, x=0,y=0,w=512,h=512,r=0,g=0,b=0,a=0):
-        
-        super().__init__()
-
-        self.scene = QGraphicsScene()
-        self.setScene(self.scene)
-        self.setBackgroundBrush(QColor(r, g, b, a))
-        self.setGeometry(x, y, w, h)
-        self.scene.setBackgroundBrush(QColor(r, g, b, a))  # Set the background color to light gray
-        self.setParent(main_window.main_widget) """
-class devmod:
-    def __init__(self):
-        super().__init__()
-        self.model()
-        
-    
-    def model(self, dtype=None):
-        uptpdate_values = contents.update_values()
-        self.model = Sequential()
-        self.model.add(InputLayer(input_shape=(512, 512, 1)))
-        self.model.add(Conv2D(kernel_size=(uptpdate_values[0], uptpdate_values[0]), kernel_initializer=self.initialize_kernel))
-        self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-        return self.model
-        
-
-    def initialize_kernel(self, shape, dtype=None):
-        customFilter = customFilter.reshape((self.filterSize, self.filterSize, 1, 1))
-        assert customFilter.shape == shape
-        return K.variable(customFilter, dtype='float32')
-
-class makeSlider(QSlider):
-    def __init__(self, label, call_on_change, x=0,y=0,w=512,h=32,min=0,max=100,val=50):
-        super().__init__()
-        self.sliderlabel = QLabel()
-
-        self.setOrientation(Qt.Orientation.Horizontal)
-        self.setGeometry(x,y,w,h)
-        self.setMinimum(min)
-        self.setMaximum(max)
-        self.setValue(val)
-        self.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self.setTickInterval(1)
-        
-
-        self.sliderlabel.setText(label + " [px] : %d" % self.value())
-        self.call_on_change = call_on_change
-        
-        self.valueChanged.connect(call_on_change)
-        
-        self.sliderlabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.sliderlabel.setGeometry(x,y-h+5,w,h)
-
-        self.setParent(main_window.main_widget)
-        self.sliderlabel.setParent(main_window.main_widget)
-
-class makeDial(QDial):
-    def __init__(self, call_on_change, x, y, w, h, min, max, val):
-        super().__init__()
-        
-        self.setNotchesVisible(True)
-        self.setMaximum(max)
-        self.setMinimum(min)
-        self.setValue(val)
-        self.setGeometry(x,y,w,h)
-        self.setParent(main_window.main_widget)
-        self.valueChanged.connect(call_on_change)
-
-
-
-
-class makeButton(QPushButton):
-    def __init__(self, label, call_on_press, x=0,y=0,w=128,h=32):
-        super().__init__()
-        self.label = label
-        self.call_on_press = call_on_press
-        self.setText(label)
-        self.setGeometry(x,y,w,h)
-        self.clicked.connect(self.call_on_press)
-        self.setParent(main_window.main_widget)
-
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        # Create the main widget
-        self.main_widget = QWidget()
-        self.setFixedSize(1560,800)
-        self.setCentralWidget(self.main_widget)
-
-class loadImage(QGraphicsPixmapItem):
-    def __init__(self, path, scene):
-        super().__init__()
-        self.image_path = path
-        self.parent_scene = scene
-        self.pixmap = QPixmap(self.image_path)
-        
-
-        if not self.pixmap.isNull():
-            self.pixmap_item = self.pixmap
-            self.parent_scene.addItem(self)
-        else:
-            print(f"Error loading image from {self.image_path}")
-
+#Others
+import numpy as np
+import cv2
 
 class Contents:
     def __init__(self):
@@ -223,7 +39,7 @@ class Contents:
         
         self.random_filter_BTN = makeButton("Randomize", self.random_filter_press, x=668, y=276+38, w=120, h=28)
         self.invert_filter_BTN = makeButton("Invert", self.invert_filter_press, x=668, y=276+38+38, w=120, h=28)
-        self.invert_filter_BTN = makeButton("Convolute", self.convolute_press, x=668, y=276+38+38+38, w=120, h=28)
+        self.convolute_BTN = makeButton("Convolute", self.convolute_press, x=668, y=276+38+38+38, w=120, h=28)
         #self.convolute_BTN = makeButton("--> Convolute -->", self.convolute_press, x=532, y=276+64+42+42, w=256)
         
         self.filter_size_indicator_label = make_label(532, 395, 128, 24, "32 px","center")
@@ -275,12 +91,34 @@ class Contents:
         self.display("image_container_center_bot", self.filter_to_be_used, 2)
         #self.change_image("label_center_bot", invert=True, random=False, filter_update=True, filter_size=self.filter_size_DIAL.value())
 
+    
+   
+
+    def arbitrary_3x3_initializer(self,shape, dtype=None):
+        # Define your custom 3x3 weights here
+        weights = np.array([[-1, 0, 1],
+                            [-1, 0, 1],
+                            [-1, 0, 1]])
+        weights = weights.reshape((3, 3, 1, 1))
+        return K.variable(weights,  dtype='float32')
+    
     def convolute_press(self):
         print("convolute_press")
-        uptpdate_values = contents.update_values()
+        self.model = Sequential()
+        self.model.add(Conv2D(filters=1,kernel_size=(3, 3), activation='relu', kernel_initializer=self.arbitrary_3x3_initializer, input_shape=(512, 512, 1)))
+        input = cv2.resize(self.input_original, (512,512), interpolation = cv2.INTER_NEAREST)
+        input = input.reshape((1, 512, 512, 1))
+        input = input/255      
+        self.result = self.model.predict(input)
+        self.result = self.result[0,:,:,0]
+        self.display("image_container_right", self.result, 3)
+        cv2.imwrite("result.png", self.result*255) 
+        print("Result Shape :" + str(self.result.shape))
+
+        """self.update_values()
         self.model = Sequential()
         self.model.add(InputLayer(input_shape=(512, 512, 1)))
-        self.model.add(Conv2D(filters=1,kernel_size=(uptpdate_values[0], uptpdate_values[0]), kernel_initializer=self.initialize_kernel))
+        self.model.add(Conv2D(filters=1,kernel_size=(self.filter_size, self.filter_size), strides=(1,1), kernel_initializer=self.initialize_kernel))
         self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy']) 
         input = cv2.resize(self.input_original, (512,512), interpolation = cv2.INTER_NEAREST)
         input = input.reshape((1, 512, 512, 1))
@@ -288,6 +126,7 @@ class Contents:
         self.result = self.model.predict(input)
         self.result = self.result[0,:,:,0]
         self.display("image_container_right", self.result, 3)
+        print(self.result.shape) """
 
     def initialize_kernel(self, shape, dtype=None):
         self.customFilter = self.customFilter.reshape((self.filter_size, self.filter_size, 1, 1))
@@ -363,6 +202,8 @@ class Contents:
     def display(self,  image_container_name, image, image_category=1):
         display_width = contents.items[image_container_name].width()
         display_height = contents.items[image_container_name].height()
+        print("Display Height:" + str(display_height))
+        print("Display Width:" + str(display_width))
         if image_category == 2:
             self.customFilter = image
             filter_to_display = cv2.resize(image, (display_width,display_height), interpolation = cv2.INTER_NEAREST)
