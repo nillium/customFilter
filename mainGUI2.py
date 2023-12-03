@@ -17,12 +17,39 @@ from matplotlib import pyplot as plt
 import tensorflow as tf
 from tensorflow import keras
 
+class make_label(QLabel):
+    def __init__(self, x, y, w, h, label_text="None", alignment="center"):
+        super().__init__()
+        
+        self.setText(label_text)
+        self.setStyleSheet("background-color: #eeeeee; border: none; padding: 0px;")
+        self.setFixedHeight(h)
+        self.setFixedWidth(w)
+        width = self.width()
+        height = self.height()
+        print("x:" + str(x))
+        print("y:" + str(y))
+        print("width:" + str(w))
+        print("height:" + str(h))
+        print("width/2:" + str(width/2))
+        print("height/2:" + str(height/2))
+        #print(round((x-(width/2))))
+        #print(round((height/2)))
+        self.setGeometry(x, y, w, h)
+        self.setParent(main_window.main_widget)
+        if alignment == "center":
+            self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        if alignment == "left":
+            self.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        if alignment == "right":
+            self.setAlignment(Qt.AlignmentFlag.AlignRight)
+
 class make_image_container(QLabel):
     def __init__(self, label_text=None, alignment="center", image_source_type="file", image_source=None, x=0, y=0, w=128, h=32):
         super().__init__()
 
         self.setGeometry(x, y, w, h)
-        self.setStyleSheet("background-color: lightgray; border: 1px solid #bbbbbb; padding: 0px;")
+        self.setStyleSheet("background-color: dddddd; border: 1px solid #dddddd; padding: 0px;")
         
         if not label_text == None:
             self.setText(label_text)
@@ -80,15 +107,17 @@ class make_image_container(QLabel):
 class devmod:
     def __init__(self):
         super().__init__()
+        self.model()
         
     
     def model(self, dtype=None):
         uptpdate_values = contents.update_values()
-        model = Sequential()
-        model.add(InputLayer(input_shape=(512, 512, 1)))
-        model.add(Conv2D(kernel_size=(uptpdate_values[0], uptpdate_values[0]), kernel_initializer=self.initialize_kernel))
-        model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-        return model
+        self.model = Sequential()
+        self.model.add(InputLayer(input_shape=(512, 512, 1)))
+        self.model.add(Conv2D(kernel_size=(uptpdate_values[0], uptpdate_values[0]), kernel_initializer=self.initialize_kernel))
+        self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        return self.model
+        
 
     def initialize_kernel(self, shape, dtype=None):
         customFilter = customFilter.reshape((self.filterSize, self.filterSize, 1, 1))
@@ -181,24 +210,28 @@ class Contents:
         #self.rightCanvas = makeCanvas(x=798, y=10,w=512,h=512)^
         self.image_container_left = make_image_container(image_source_type="file", image_source="checker.png", x=10, y=10, w=512, h=512)
         self.image_container_center_top = make_image_container(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=10, w=256, h=256)
-        self.image_container_center_bot = make_image_container(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=316+64+10+38, w=256, h=256)
+        self.image_container_center_bot = make_image_container(alignment="left", image_source_type="file", image_source="checker.png", x=532, y=428, w=256, h=256)
         self.image_container_right = make_image_container(image_source_type="file", image_source="checker.png", x=798, y=10, w=512, h=512)
         
         self.change_input_BTN = makeButton("Change Input", self.change_input_press, x=10, y=532)
 
         
         #self.filter_size_SLDR = makeSlider("Filter Size", self.filter_size_SLDR_value_change, x=532, y=296, w=256, min=2, max=64, val=8)
-        self.custom_filter_BTN = makeButton("Load Custom Filter", self.custom_filter_press, x=532, y=276, w=256, h=28)
-        self.process_filter_BTN = makeButton("Process Filter", self.process_filter_press, x=532, y=316+64+10, w=256, h=28)
-        self.convolute_BTN = makeButton("Convolute", self.convolute_press, x=532, y=316+64+312, w=256, h=28)
+        self.custom_filter_BTN = makeButton("Load Custom Filter", self.custom_filter_press, x=668, y=276, w=120, h=28)
+        #self.process_filter_BTN = makeButton("Process Filter", self.process_filter_press, x=532, y=316+64+10, w=256, h=28)
+        #self.convolute_BTN = makeButton("Convolute", self.convolute_press, x=532, y=316+64+312, w=256, h=28)
         
-        self.random_filter_BTN = makeButton("Random", self.random_filter_press, x=728, y=316, w=60, h=28)
-        self.invert_filter_BTN = makeButton("Invert", self.invert_filter_press, x=728, y=316+64-28, w=60, h=28)
+        self.random_filter_BTN = makeButton("Randomize", self.random_filter_press, x=668, y=276+38, w=120, h=28)
+        self.invert_filter_BTN = makeButton("Invert", self.invert_filter_press, x=668, y=276+38+38, w=120, h=28)
+        self.invert_filter_BTN = makeButton("Convolute", self.convolute_press, x=668, y=276+38+38+38, w=120, h=28)
         #self.convolute_BTN = makeButton("--> Convolute -->", self.convolute_press, x=532, y=276+64+42+42, w=256)
-
-        self.filter_size_DIAL = makeDial(self.filter_size_DIAL_value_change, 532, 316, 64, 64, 2, 64, 32)
-        self.white_treshold_DIAL = makeDial(self.white_treshold_DIAL_value_change, 532+64, 316, 64, 64, 0, 255, 255)
-        self.black_treshold_DIAL = makeDial(self.black_treshold_DIAL_value_change, 532+128, 316, 64, 64, 0, 255, 0)
+        
+        self.filter_size_indicator_label = make_label(532, 395, 128, 24, "32 px","center")
+        self.filter_size_DIAL = makeDial(self.filter_size_DIAL_value_change, 532+64-48, 305, 96, 96, 2, 64, 32)
+       
+        self.filter_size_label = make_label(532, 278, 128, 24, "Filter Size Control","center")
+        #self.white_treshold_DIAL = makeDial(self.white_treshold_DIAL_value_change, 532+64, 316, 64, 64, 0, 255, 255)
+        #self.black_treshold_DIAL = makeDial(self.black_treshold_DIAL_value_change, 532+128, 316, 64, 64, 0, 255, 0)
         
         #self.slider.sliderlabel.setParent(main_window.main_widget)
         #self.slider.valueChanged.connect()
@@ -211,7 +244,8 @@ class Contents:
         self.items={
             "image_container_left" : self.image_container_left,
             "image_container_center_top" : self.image_container_center_top,
-            "image_container_center_bot" : self.image_container_center_bot
+            "image_container_center_bot" : self.image_container_center_bot,
+            "image_container_right" : self.image_container_right,
             #"filter_size_SLDR" : self.filter_size_SLDR
         }
 
@@ -229,48 +263,69 @@ class Contents:
 
     def random_filter_press(self):
         print("random_filter_press")
-        self.update_values()
-        self.randomize(self.filter_size)
+        self.update_values()   
+        self.filter_original = np.random.randint(0, 256, size=(self.filter_size, self.filter_size), dtype=np.uint8)
+        #self.randomize(self.filter_size)
         self.display("image_container_center_top", self.filter_original, 2)
+        self.display("image_container_center_bot", self.filter_original, 2)
     
     def invert_filter_press(self):
         print("invert_filter_press")
-        self.invert()
-        self.display("image_container_center_bot", self.filter_original, 2)
+        self.filter_to_be_used = cv2.bitwise_not(self.filter_to_be_used)
+        self.display("image_container_center_bot", self.filter_to_be_used, 2)
         #self.change_image("label_center_bot", invert=True, random=False, filter_update=True, filter_size=self.filter_size_DIAL.value())
 
     def convolute_press(self):
         print("convolute_press")
+        uptpdate_values = contents.update_values()
+        self.model = Sequential()
+        self.model.add(InputLayer(input_shape=(512, 512, 1)))
+        self.model.add(Conv2D(filters=1,kernel_size=(uptpdate_values[0], uptpdate_values[0]), kernel_initializer=self.initialize_kernel))
+        self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy']) 
+        input = cv2.resize(self.input_original, (512,512), interpolation = cv2.INTER_NEAREST)
+        input = input.reshape((1, 512, 512, 1))
+        print(input.shape)
+        self.result = self.model.predict(input)
+        self.result = self.result[0,:,:,0]
+        self.display("image_container_right", self.result, 3)
 
+    def initialize_kernel(self, shape, dtype=None):
+        self.customFilter = self.customFilter.reshape((self.filter_size, self.filter_size, 1, 1))
+        assert self.customFilter.shape == shape
+        return K.variable(self.customFilter, dtype='float32')
+    
     def filter_size_SLDR_value_change(self):
         self.items["filter_size_SLDR"].sliderlabel.setText("Filter Size [px] : %d" % self.filter_size_SLDR.value())
 
     def filter_size_DIAL_value_change(self):
+        self.filter_size = contents.filter_size_DIAL.value()
+        self.filter_size_indicator_label.setText(str(self.filter_size)+" px")
+        self.filter_to_be_used = cv2.resize(self.filter_original, (self.filter_size,self.filter_size), interpolation = cv2.INTER_NEAREST)
+        self.display("image_container_center_bot", self.filter_to_be_used, 2)
         print("filter_size_DIAL_value_change")
     
-    def white_treshold_DIAL_value_change(self):
-        self.update_values()
-        print(self.white_treshold)
-        self.trim_from_top(self.white_treshold)
-        self.display("image_container_center_bot", self.filter_trimmed_from_top, 2)
-        print("white_treshold_DIAL_value_change")
+    #def white_treshold_DIAL_value_change(self):
+        #self.update_values()
+        #print(self.white_treshold)
+        #self.trim_from_top(self.white_treshold)
+        #self.display("image_container_center_bot", self.filter_trimmed_from_top, 2)
+        #print("white_treshold_DIAL_value_change")
     
-    def black_treshold_DIAL_value_change(self):
-        print("black_treshold_DIAL_value_change")
+    #def black_treshold_DIAL_value_change(self):
+        #print("black_treshold_DIAL_value_change")
     
-    def process_filter_press(self):
-        print("process_filter_press")
-        self.update_values()
-        print(self.black_treshold)
-        self.trim_from_top(self.white_treshold)
-        self.trim_from_bottom(self.white_treshold)
-        self.display("image_container_center_bot", self.filter_original, 2)
+    #def process_filter_press(self):
+        #print("process_filter_press")
+        #self.update_values()
+        #print(self.black_treshold)
+        #self.filter_to_be_used = cv2.resize(self.filter_original, (self.filter_size,self.filter_size), interpolation = cv2.INTER_NEAREST)
+        #self.display("image_container_center_bot", self.filter_to_be_used, 2)
 
     def update_values(self):
         self.filter_size = contents.filter_size_DIAL.value()
-        self.white_treshold = contents.white_treshold_DIAL.value()
-        self.black_treshold = contents.black_treshold_DIAL.value()
-        return self.filter_size, self.white_treshold, self.black_treshold
+        #self.white_treshold = contents.white_treshold_DIAL.value()
+        #self.black_treshold = contents.black_treshold_DIAL.value()
+        return self.filter_size
         
     def load_custom_image(self, filter=True, input=False):
         file_type_filter = 'Image File (*.png *.jpg)'
@@ -287,27 +342,29 @@ class Contents:
         image_path = response[0]
         if filter:
             self.filter_original = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            print(self.filter_original.shape)
+            
         if input:
             self.input_original = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            print(self.input_original.shape)
 
-    def randomize(self, filter_size):
-        self.filter_original = np.random.randint(0, 256, size=(filter_size, filter_size), dtype=np.uint8)
 
-    def invert(self):
-        self.filter_original = cv2.bitwise_not(self.filter_original)
+
         
-    def trim_from_top(self, white_treshold):
-        ret,self.filter_trimmed_from_top = cv2.threshold(self.filter_original,white_treshold,255,cv2.THRESH_TRUNC)
+        
+    #def trim_from_top(self, white_treshold):
+        #ret,self.filter_trimmed_from_top = cv2.threshold(self.filter_original,white_treshold,255,cv2.THRESH_TRUNC)
         #ret1,self.filter_original = cv2.threshold(self.filter_original,0,self.white_treshold,cv2.THRESH_BINARY)
 
-    def trim_from_bottom(self, black_treshold):
-        ret,self.filter_trimmed_from_bottom = cv2.threshold(self.filter_original,0,black_treshold,cv2.THRESH_TRUNC)
+    #def trim_from_bottom(self, black_treshold):
+        #ret,self.filter_trimmed_from_bottom = cv2.threshold(self.filter_original,0,black_treshold,cv2.THRESH_TRUNC)
         #ret1,self.filter_original = cv2.threshold(self.filter_original,0,black_treshold,cv2.THRESH_BINARY)
 
     def display(self,  image_container_name, image, image_category=1):
         display_width = contents.items[image_container_name].width()
         display_height = contents.items[image_container_name].height()
         if image_category == 2:
+            self.customFilter = image
             filter_to_display = cv2.resize(image, (display_width,display_height), interpolation = cv2.INTER_NEAREST)
             filter_to_display_pix = QImage(filter_to_display, display_width, display_height, (1*display_width), QImage.Format.Format_Grayscale8)
             self.filter_display_pixmap = QPixmap.fromImage(filter_to_display_pix)
