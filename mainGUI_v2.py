@@ -22,7 +22,7 @@ class Contents:
         self.maker = Maker()
     
        
-        self.image_container_left = self.maker
+        self.image_container_left = 
 
         
         
